@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="ipl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPL</title>
+    <link rel="stylesheet" href="./assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="./assets/css/fonts.css">
+    <link rel="stylesheet" href="./assets/css/all.min.css">
+    <link rel="stylesheet" href="./assets/css/fontawesome.min.css">
+    <link rel="stylesheet" href="./assets/css/style.css">
+
+    <script src="assets/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/jquery.js"></script>
+    <script src="assets/js/angular.min.js"></script>
+    <script src="assets/js/angular-route.min.js"></script>
+    <script src="./app.js"></script>
+</head>
+<body class="">
+    <div class="col-md-12 d-flex header">
+        <div class="col-md-2 d-flex justify-content-center title header-left">Indian Premier League</div>
+        <div class="col-md-10 header-right">
+            <div class="profile">
+                <i class="fa-solid fa-user"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-12 d-flex body-content">
+        <div class="col-md-2 sidebar">
+            <div class="menu-option">
+                <a href="#!/">Dashboard</a>
+            </div>
+            <div class="menu-option">
+                <a href="#!/player">Player</a>
+            </div>
+        </div>
+        <div class="col-md-10">
+            <div ng-view></div>
+        </div>
+    </div>
+</body>
+<script src="./app.js"></script>
+</html>
