@@ -1,6 +1,8 @@
 (
     function () {
         'use strict';
+
+        const BACKEND_URL = "http://localhost:8000";
     
         var app = angular.module('ipl', ['ngRoute']).config(config);
     
@@ -59,15 +61,36 @@
                 controller: 'playerController',
                 templateUrl: 'views/player/player.html'
             })
+            .when('/player/create', {
+                controller: 'createPlayerController',
+                templateUrl: 'views/player/create.html'
+            })
+            .when('/player/edit/:id', {
+                controller: 'editPlayerController',
+                templateUrl: 'views/player/create.html'
+            })
             .otherwise({ redirectTo: '/' });
         }    
 
         app.controller('dashboardController', function ($rootScope, $scope, $http, $location) {
-            console.log('dashboard')
+            $http.get(BACKEND_URL + '/api/player', {})
+            .then(function successCallback(response) {
+                console.log(response.data);
+            },function errorCallback(response){
+                console.log(response.data);
+            });
         })
 
         app.controller('playerController', function ($rootScope, $scope, $http, $location) {
             console.log('player')
+        })
+
+        app.controller('createPlayerController', function ($rootScope, $scope, $http, $location) {
+            console.log('create player')
+        })
+
+        app.controller('editPlayerController', function ($rootScope, $scope, $http, $location) {
+            console.log('edit player')
         })
 
     }

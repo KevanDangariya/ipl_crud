@@ -3,6 +3,10 @@
     padding: 0;
     font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
 }
+.breadcrumb {
+    background: #f3f3f3;
+    font-size: 20px;
+}
 .header {
     height: 50px;
     border-bottom: 2px solid #fff;
@@ -22,15 +26,24 @@
 }
 .sidebar {
     background: #31473A;
-    font-size: 20px; 
+    font-size: 18px; 
     height: 93vh;
 }
 .sidebar .menu-option {
     border-bottom: 1px solid #fff;
-    padding: 10px 0;
+    padding: 6px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #fff;
 }
-.sidebar .menu-option a {
+.sidebar .menu-option .option-name {
     padding-left: 14px;
+    color: #fff;
+    text-decoration: none;
+}
+.sidebar .menu-option .option-create {
+    padding-right: 10px;
     color: #fff;
     text-decoration: none;
 }
