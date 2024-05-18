@@ -1,9 +1,95 @@
+<style>
+    .select2-selection.select2-selection--single {
+        height: 34px;
+    }
+</style>
 <div>
-    <nav aria-label="breadcrumb">
+    <nav aria-label="breadcrumb" class="view-header">
         <ol class="breadcrumb p-2">
             <li class="breadcrumb-item"><a href="#!/player">Player</a></li>
             <li class="breadcrumb-item active " aria-current="page">Create</li>
         </ol>
+        <button type="submit" class="btn btn-primary save-btn" style="right: 0px;" onclick="save()">Save</button>
     </nav>
-    <h1>Player Create</h1>
+    <div class="form-inline-view">
+        <div class="col-lg-4">
+            <div>
+                <label>Name</label>
+            </div>
+            <div>
+                <input type="text" ng-model="player.name" name="player.name" placeholder="Enter Name" class="input-field">
+            </div>
+            <span id="name_err" class="error text-danger"></span>
+        </div>
+        <div class="col-lg-4">
+            <div>
+                <label>Type</label>
+            </div>
+            <div>
+                <!-- <select ui-select2 style="width: 100%;" id="" ng-model="player.type" data-placeholder="Select player type">
+                    <option value=""></option>
+                </select> -->
+                <select id="player_type" style="width: 100%;" name="state" ng-model="player.type_id" ui-select2-data="player.type" data-placeholder="Select player type">  
+                    <!-- <option ng-repeat="p in player" ng-value="{{p.id}}">{{p.name}}</option>   -->
+                    <option value=""></option>
+                </select>
+                <!-- <select class="form-control" id>
+                    <option selected="selected">orange</option>
+                    <option>white</option>
+                    <option>purple</option>
+                </select> -->
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div>
+                <label>Team</label>
+            </div>
+            <div>
+                <select ui-select2 style="width: 100%;" id="player_team" ng-model="player.team" data-placeholder="Select player team">
+                    <option value=""></option>
+                </select>
+            </div>
+        </div>
+        <div class="clearfix"></div>
+        <div class="col-lg-4">
+            <div>
+                <label>Status</label>
+            </div>
+            <div>
+                <input type="radio" id="active" ng-model="playerType.status" name="playerType.status" value="0" ng-checked="1">
+                <label for="active">Active</label></br>
+                <input type="radio" id="inactive" ng-model="playerType.status" name="playerType.status" value="1" ng-checked="0">
+                <label for="inactive">Inactive</label>
+            </div>
+            <span id="status_err" class="error text-danger"></span>
+        </div>
+    </div>
+    <!-- <div class="row">
+        <div class="col-md-4">
+            <div>
+                <label>Name</label>
+            </div>
+            <div>
+                <select ui-select2 style="width: 100%;" ng-model="select2" data-placeholder="Pick a number">
+                    <option value=""></option>
+                    <option value="one">First</option>
+                    <option value="two">Second</option>
+                    <option value="three">Third</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div>
+                <label>Type</label>
+            </div>
+            <div>
+                <select ui-select2 style="width: 100%;" ng-model="select2" data-placeholder="Specialization">
+                    <option value=""></option>
+                    <option value="Batsman">Batsman</option>
+                    <option value="two">Second</option>
+                    <option value="three">Third</option>
+                </select>
+            </div>
+        </div>
+    </div> -->
 </div>

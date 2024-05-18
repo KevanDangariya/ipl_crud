@@ -4,7 +4,7 @@
 
         const BACKEND_URL = "http://localhost:8000";
     
-        var app = angular.module('ipl', ['ngRoute']).config(config);
+        var app = angular.module('ipl', ['ngRoute','ui.select2']).config(config);
     
         // app.run(function ($rootScope, $location, $http) {
         //     $rootScope.logout = function() {
@@ -69,6 +69,30 @@
                 controller: 'editPlayerController',
                 templateUrl: 'views/player/create.html'
             })
+            .when('/playerType', {
+                controller: 'playerTypeController',
+                templateUrl: 'views/playerType/playerType.html'
+            })
+            .when('/playerType/create', {
+                controller: 'createPlayerTypeController',
+                templateUrl: 'views/playerType/create.html'
+            })
+            .when('/playerType/edit/:id', {
+                controller: 'editPlayerTypeController',
+                templateUrl: 'views/playerType/create.html'
+            })
+            .when('/team', {
+                controller: 'teamController',
+                templateUrl: 'views/team/team.html'
+            })
+            .when('/team/create', {
+                controller: 'createTeamController',
+                templateUrl: 'views/team/create.html'
+            })
+            .when('/team/edit/:id', {
+                controller: 'editTeamController',
+                templateUrl: 'views/team/create.html'
+            })
             .otherwise({ redirectTo: '/' });
         }    
 
@@ -82,15 +106,538 @@
         })
 
         app.controller('playerController', function ($rootScope, $scope, $http, $location) {
-            console.log('player')
+
+            // edit player type
+            $scope.edit = function(id) {
+                $http.post(BACKEND_URL + '/api/getPlayerById/' + id , {
+                    data: id
+                })
+                .then(function successCallback(response) {
+                    $location.path('/player/edit/'+id);
+                    $scope.player = response.data.data;
+                },function errorCallback(response){
+                    var err = response.data.errors;
+                });
+            }
+
+            // delete player type
+            $scope.delete = function(id) {
+
+                $http.post(BACKEND_URL + '/api/deletePlayerById/' + id, {
+                    data: id
+                }).then(function successCallback(response) {
+                    getPlayer();                    
+                },function errorCallback(response){
+                    $('.error').html('Wrong Credentials');
+                    return;
+                }) 
+            }
+
+            function buildDataTable(data) {
+                $('#table-view').DataTable().destroy();
+                $('#table-view').DataTable({
+                    ordering: true,
+                    data: data,
+                    searching: true,
+                    columns: [
+                        {'data':'id'},
+                        {'data':'name'},
+                        {'data':'type'},
+                        {'data':'team'},
+                        {
+                            'data':'status',
+                            render: function (data) {
+                                return data == 0 ? '<span class=" status bg-primary text-white">Active</span>' : '<span class="status bg-warning">Inactive</span>';
+                            }
+                        },
+                        {
+                            'data': 'id', 
+                            render: function(data, type) {
+                                return type == 'display'
+                                ? '<i class="fas fa-edit" ng-click="edit('+data+')"></i>'
+                                : data  
+                            }
+                        },
+                        {
+                            'data': 'id', 
+                            render: function(data, type) {
+                                return type == 'display'
+                                ? '<i class="fa fa-trash" ng-click="delete('+data+')" aria-hidden="true"></i>'
+                                : data  
+                            }
+                        }
+                    ],
+                    rowCallback: function(row) {    
+                        if (!row.compiled) {
+                            $compile(angular.element(row))($scope);
+                            row.compiled = true;  
+                        }
+                    }
+                });
+            }
+
+            function getPlayer() {
+                $http.get(BACKEND_URL + '/api/player', {})
+                .then(function successCallback(response) {
+                    $location.path('/player');
+                    buildDataTable(response.data.data);
+                },function errorCallback(response){
+                    var err = response.data.errors;
+                });
+            }
+            getPlayer();
         })
 
         app.controller('createPlayerController', function ($rootScope, $scope, $http, $location) {
-            console.log('create player')
+            $scope.player = {name: '', player_type: '', team: '', status: 0};
+            $scope.save = function() {
+                if ($scope.player.status == null) {
+                    $('#status_err').html('Please select status.');
+                }
+                if (!$scope.player.team) {
+                    $('#team_err').html('Please select team.');
+                }
+                if (!$scope.player.player_type) {
+                    $('#type_err').html('Please select type.');
+                }
+                if (!$scope.player.name) {
+                    $('#name_err').html('Please enter name.');
+                }
+                else {
+                    $('#name_err').html('');
+                    $('#team_err').html('');
+                    $('#type_err').html('');
+
+                    $http.post(BACKEND_URL + '/api/createPlayer', {
+                        data: $scope.player
+                    })
+                    .then(function successCallback(response) {
+                        $location.path('/player');
+                    },function errorCallback(response){
+                        var err = response.data.errors;
+                        if (err.name) {
+                            $('#name_err').html(err.name);                            
+                        }
+                        if (!$scope.player.team) {
+                            $('#team_err').html(err.team);
+                        }
+                        if (!$scope.player.player_type) {
+                            $('#type_err').html(err.type);
+                        }
+                        if (err.status) {
+                            $('#status_err').html(err.status);                            
+                        }
+                    });
+                }
+            } 
+
+            $('#player_type').click(function () {
+                $http.get(BACKEND_URL + '/api/playerTypeDropdown', {})
+                .then(function successCallback(response) {
+                    console.log(response);
+                    $('#player_type').select2({
+                        data: response.data.playerType
+                    })
+                },function errorCallback(response){
+                    var err = response.data.errors;
+                });
+            })
+
+            $('#player_team').on('click', function () {
+                $http.post(BACKEND_URL + '/api/teamDropdown', {})
+                .then(function successCallback(response) {
+                    console.log(response);
+                    // $('#player_type').select2(response)
+                },function errorCallback(response){
+                    var err = response.data.errors;
+                });
+            })
         })
 
         app.controller('editPlayerController', function ($rootScope, $scope, $http, $location) {
-            console.log('edit player')
+            var url = $location.absUrl().split('/edit/');
+            var id = url[1];
+            $http.post(BACKEND_URL + '/api/getPlayerById/' + id , {})
+            .then(function successCallback(response) {
+                $location.path('/player/edit/'+id);
+                $scope.player = response.data.data[0];
+                if (response.data.data[0].status == 0) {
+                    $scope.player.status = '0';
+                } else {
+                    $scope.player.status = '1';
+                }
+            },function errorCallback(response){
+                var err = response.data.errors;
+            });
+
+
+            $scope.save = function() {
+                if ($scope.player.status == null) {
+                    $('#status_err').html('Please select status.');
+                }
+                if (!$scope.player.team) {
+                    $('#team_err').html('Please select team.');
+                }
+                if (!$scope.player.type) {
+                    $('#type_err').html('Please select type.');
+                }
+                if (!$scope.playerType.name) {
+                    $('#name_err').html('Please enter name.');
+                }
+                else {
+                    $('#name_err').html('');
+                    $('#team_err').html('');
+                    $('#type_err').html('');
+
+                    $http.post(BACKEND_URL + '/api/editPlayerById/' + id, {
+                        data: $scope.player
+                    })
+                    .then(function successCallback(response) {
+                        $location.path('/player');
+                    },function errorCallback(response){
+                        var err = response.data.errors;
+                        if (err.name) {
+                            $('#name_err').html(err.name);                            
+                        }
+                        if (!$scope.player.team) {
+                            $('#team_err').html(err.team);
+                        }
+                        if (!$scope.player.type) {
+                            $('#type_err').html(err.type);
+                        }
+                        if (err.status) {
+                            $('#status_err').html(err.status);                            
+                        }
+                    });
+                }
+            }
+        })
+
+        app.controller('playerTypeController', function ($rootScope, $scope, $http, $location, $compile) {
+
+            // edit player type
+            $scope.edit = function(id) {
+                $http.post(BACKEND_URL + '/api/getPlayerTypeById/' + id , {
+                    data: id
+                })
+                .then(function successCallback(response) {
+                    $location.path('/playerType/edit/'+id);
+                    $scope.playerType = response.data.data;
+                },function errorCallback(response){
+                    var err = response.data.errors;
+                });
+            }
+
+            // delete player type
+            $scope.delete = function(id) {
+
+                $http.post(BACKEND_URL + '/api/deletePlayerTypeById/' + id, {
+                    data: id
+                }).then(function successCallback(response) {
+                    getPlayerType();                    
+                },function errorCallback(response){
+                    $('.error').html('Wrong Credentials');
+                    return;
+                }) 
+            }
+
+            function buildDataTable(data) {
+                $('#table-view').DataTable().destroy();
+                $('#table-view').DataTable({
+                    ordering: true,
+                    data: data,
+                    searching: true,
+                    columns: [
+                        {'data':'id'},
+                        {'data':'name'},
+                        {
+                            'data':'status',
+                            render: function (data) {
+                                return data == 0 ? '<span class=" status bg-primary text-white">Active</span>' : '<span class="status bg-warning">Inactive</span>';
+                            }
+                        },
+                        {
+                            'data': 'id', 
+                            render: function(data, type) {
+                                return type == 'display'
+                                ? '<i class="fas fa-edit" ng-click="edit('+data+')"></i>'
+                                : data  
+                            }
+                        },
+                        {
+                            'data': 'id', 
+                            render: function(data, type) {
+                                return type == 'display'
+                                ? '<i class="fa fa-trash" ng-click="delete('+data+')" aria-hidden="true"></i>'
+                                : data  
+                            }
+                        }
+                    ],
+                    rowCallback: function(row) {    
+                        if (!row.compiled) {
+                            $compile(angular.element(row))($scope);
+                            row.compiled = true;  
+                        }
+                    }
+                });
+            }
+
+            function getPlayerType() {
+                $http.get(BACKEND_URL + '/api/playerType', {})
+                .then(function successCallback(response) {
+                    $location.path('/playerType');
+                    buildDataTable(response.data.data);
+                },function errorCallback(response){
+                    var err = response.data.errors;
+                });
+            }
+            getPlayerType();
+        })
+
+        app.controller('createPlayerTypeController', function ($rootScope, $scope, $http, $location) {
+            $scope.playerType = {name: '', status: 0};
+            $scope.save = function() {
+                if ($scope.playerType.status == null) {
+                    $('#status_err').html('Please select status.');
+                }
+                if (!$scope.playerType.name) {
+                    $('#name_err').html('Please enter name.');
+                }
+                else {
+                    $('#name_err').html('');
+
+                    $http.post(BACKEND_URL + '/api/createPlayerType', {
+                        data: $scope.playerType
+                    })
+                    .then(function successCallback(response) {
+                        $location.path('/playerType');
+                    },function errorCallback(response){
+                        var err = response.data.errors;
+                        if (err.name) {
+                            $('#name_err').html(err.name);                            
+                        }
+                        if (err.status) {
+                            $('#status_err').html(err.status);                            
+                        }
+                    });
+                }
+            } 
+        })
+
+        app.controller('editPlayerTypeController', function ($rootScope, $scope, $http, $location) {
+            var url = $location.absUrl().split('/edit/');
+            var id = url[1];
+            $http.post(BACKEND_URL + '/api/getPlayerTypeById/' + id , {})
+            .then(function successCallback(response) {
+                $location.path('/playerType/edit/'+id);
+                $scope.playerType = response.data.data[0];
+                if (response.data.data[0].status == 0) {
+                    $scope.playerType.status = '0';
+                } else {
+                    $scope.playerType.status = '1';
+                }
+            },function errorCallback(response){
+                var err = response.data.errors;
+            });
+
+
+            $scope.save = function() {
+                if ($scope.playerType.status == null) {
+                    $('#status_err').html('Please select status.');
+                }
+                if (!$scope.playerType.name) {
+                    $('#name_err').html('Please enter name.');
+                }
+                else {
+                    $('#name_err').html('');
+
+                    $http.post(BACKEND_URL + '/api/editPlayerTypeById/' + id, {
+                        data: $scope.playerType
+                    })
+                    .then(function successCallback(response) {
+                        $location.path('/playerType');
+                    },function errorCallback(response){
+                        var err = response.data.errors;
+                        if (err.name) {
+                            $('#name_err').html(err.name);                            
+                        }
+                        if (err.status) {
+                            $('#status_err').html(err.status);                            
+                        }
+                    });
+                }
+            }
+        })
+
+        app.controller('teamController', function ($rootScope, $scope, $http, $location, $compile) {
+
+            // edit team
+            $scope.edit = function(id) {
+                $http.post(BACKEND_URL + '/api/getTeamById/' + id , {
+                    data: id
+                })
+                .then(function successCallback(response) {
+                    $location.path('/team/edit/'+id);
+                    $scope.team = response.data.data;
+                },function errorCallback(response){
+                    var err = response.data.errors;
+                });
+            }
+
+            // delete team
+            $scope.delete = function(id) {
+
+                $http.post(BACKEND_URL + '/api/deleteTeamById/' + id, {
+                    data: id
+                }).then(function successCallback(response) {
+                    getTeam();                    
+                },function errorCallback(response){
+                    $('.error').html('Wrong Credentials');
+                    return;
+                }) 
+            }
+
+            function buildDataTable(data) {
+                $('#table-view').DataTable().destroy();
+                $('#table-view').DataTable({
+                    ordering: true,
+                    data: data,
+                    searching: true,
+                    columns: [
+                        {'data':'id'},
+                        {'data':'name'},
+                        {'data':'nickname'},
+                        {
+                            'data':'status',
+                            render: function (data) {
+                                return data == 0 ? '<span class=" status bg-primary text-white">Active</span>' : '<span class="status bg-warning">Inactive</span>';
+                            }
+                        },
+                        {
+                            'data': 'id', 
+                            render: function(data, type) {
+                                return type == 'display'
+                                ? '<i class="fas fa-edit" ng-click="edit('+data+')"></i>'
+                                : data  
+                            }
+                        },
+                        {
+                            'data': 'id', 
+                            render: function(data, type) {
+                                return type == 'display'
+                                ? '<i class="fa fa-trash" ng-click="delete('+data+')" aria-hidden="true"></i>'
+                                : data  
+                            }
+                        }
+                    ],
+                    rowCallback: function(row) {    
+                        if (!row.compiled) {
+                            $compile(angular.element(row))($scope);
+                            row.compiled = true;  
+                        }
+                    }
+                });
+            }
+
+            function getTeam() {
+                $http.get(BACKEND_URL + '/api/team', {})
+                .then(function successCallback(response) {
+                    $location.path('/team');
+                    buildDataTable(response.data.data);
+                },function errorCallback(response){
+                    var err = response.data.errors;
+                });
+            }
+            getTeam();
+        })
+
+        app.controller('createTeamController', function ($rootScope, $scope, $http, $location) {
+            $scope.team = {name: '', nickname: '', status: 0};
+            $scope.save = function() {
+                if ($scope.team.status == null) {
+                    $('#status_err').html('Please select status.');
+                }
+                if ($scope.team.nickname == null) {
+                    $('#nickname_err').html('Please select nick name.');
+                }
+                if (!$scope.team.name) {
+                    $('#name_err').html('Please enter name.');
+                }
+                else {
+                    $('#name_err').html('');
+                    $('#nickname_err').html('');
+
+                    $http.post(BACKEND_URL + '/api/createTeam', {
+                        data: $scope.team
+                    })
+                    .then(function successCallback(response) {
+                        $location.path('/team');
+                    },function errorCallback(response){
+                        var err = response.data.errors;
+                        if (err.name) {
+                            $('#name_err').html(err.name);                            
+                        }
+                        if (err.status) {
+                            $('#status_err').html(err.status);                            
+                        }
+                        if (err.name) {
+                            $('#nickname_err').html(err.nickname);                            
+                        }
+                    });
+                }
+            } 
+        })
+
+        app.controller('editTeamController', function ($rootScope, $scope, $http, $location) {
+            var url = $location.absUrl().split('/edit/');
+            var id = url[1];
+            $http.post(BACKEND_URL + '/api/getTeamById/' + id , {})
+            .then(function successCallback(response) {
+                $location.path('/team/edit/'+id);
+                $scope.team = response.data.data[0];
+                if (response.data.data[0].status == 0) {
+                    $scope.team.status = '0';
+                } else {
+                    $scope.team.status = '1';
+                }
+            },function errorCallback(response){
+                var err = response.data.errors;
+            });
+
+
+            $scope.save = function() {
+                if ($scope.team.status == null) {
+                    $('#status_err').html('Please select status.');
+                }
+                if ($scope.team.nickname == null) {
+                    $('#nickname_err').html('Please select nick name.');
+                }
+                if (!$scope.team.name) {
+                    $('#name_err').html('Please enter name.');
+                }
+                else {
+                    $('#name_err').html('');
+                    $('#nickname_err').html('');
+
+                    $http.post(BACKEND_URL + '/api/editTeamById/' + id, {
+                        data: $scope.team
+                    })
+                    .then(function successCallback(response) {
+                        $location.path('/team');
+                    },function errorCallback(response){
+                        var err = response.data.errors;
+                        if (err.name) {
+                            $('#name_err').html(err.name);                            
+                        }
+                        if (err.nickname) {
+                            $('#nickname_err').html(err.nickname);                            
+                        }
+                        if (err.status) {
+                            $('#status_err').html(err.status);                            
+                        }
+                    });
+                }
+            }
         })
 
     }

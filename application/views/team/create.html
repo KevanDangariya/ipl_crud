@@ -1,0 +1,43 @@
+<div>
+    <nav aria-label="breadcrumb" class="view-header">
+        <ol class="breadcrumb p-2">
+            <li class="breadcrumb-item"><a href="#!/team">Team</a></li>
+            <li class="breadcrumb-item active " aria-current="page">Create</li>
+        </ol>
+        <button type="submit" class="btn btn-primary save-btn" ng-click="save()">Save</button>
+    </nav>
+    <div class="form-view">
+        <div class="col-lg-4">
+            <div>
+                <label>Name</label>
+            </div>
+            <div>
+                <input type="text" ng-model="team.name" name="team.name" placeholder="Enter Name" class="input-field">
+            </div>
+            <span id="name_err" class="error text-danger"></span>
+        </div>
+        <div class="clearfix"></div>
+        <div class="col-lg-4">
+            <div>
+                <label>Nick name</label>
+            </div>
+            <div>
+                <input type="text" ng-model="team.nickname" name="team.nickname" placeholder="Enter Nick Name" class="input-field">
+            </div>
+            <span id="nickname_err" class="error text-danger"></span>
+        </div>
+        <div class="clearfix"></div>
+        <div class="col-lg-4">
+            <div>
+                <label>Status</label>
+            </div>
+            <div>
+                <input type="radio" id="active" ng-model="team.status" name="team.status" value="0" ng-checked="1">
+                <label for="active">Active</label></br>
+                <input type="radio" id="inactive" ng-model="team.status" name="team.status" value="1" ng-checked="0">
+                <label for="inactive">Inactive</label>
+            </div>
+            <span id="status_err" class="error text-danger"></span>
+        </div>
+    </div>
+</div>
