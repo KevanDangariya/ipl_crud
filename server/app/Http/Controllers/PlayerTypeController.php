@@ -43,7 +43,7 @@ class PlayerTypeController extends Controller
         $input = $request->all();
 
         $validator = Validator::make($input['data'], [
-            'name' => 'required|unique:player_type',
+            'name' => 'required|unique:player_type,name,'.$id,
             'status' => 'required'
         ]);
 

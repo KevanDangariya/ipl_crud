@@ -5,6 +5,39 @@
         </ol>
     </nav>
     <div class="dashboard">
-        <h1>Welcome to Dashboard !</h1>
+        <div class="col-md-3 summury-box bg-success">
+            <div>Total Players</div>
+            <span ng-bind="dashboard.totalPlayer"></span>
+        </div>
+        <div class="col-md-3 summury-box bg-primary">
+            <div>Active Players</div>
+            <span ng-bind="dashboard.activePlayer"></span>
+        </div>
+        <div class="col-md-3 summury-box bg-danger">
+            <div>Inctive Players</div>
+            <span ng-bind="dashboard.inactivePlayer"></span>
+        </div>
+        <div class="col-md-3 summury-box bg-primary">
+            <div>Active Team</div>
+            <span ng-bind="dashboard.activeTeam"></span>
+        </div>
+        </br>
+        <div class="col-md-3 summury-box bg-info">
+            <div>Active Batsman</div>
+            <span ng-bind="dashboard.activeBatsman"></span>
+        </div>
+        <div class="col-md-3 summury-box bg-info">
+            <div>Active Bolwers</div>
+            <span ng-bind="dashboard.activeBolwers"></span>
+        </div>
+        <div class="col-md-3 summury-box bg-info">
+            <div>Active All Rounders</div>
+            <span ng-bind="dashboard.activeAllrounder"></span>
+        </div>
+        <div class="col-md-3 summury-box bg-info">
+            <div>Active Wicket Keeper</div>
+            <span ng-bind="dashboard.activeWicketKeeper"></span>
+        </div>
+
     </div>
 </div>

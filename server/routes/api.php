@@ -23,6 +23,9 @@ use App\Http\Controllers\PlayerController;
 Route::get('/playerTypeDropdown', 'App\Http\Controllers\DropdownController@playerType');
 Route::get('/teamDropdown', 'App\Http\Controllers\DropdownController@team');
 
+// dashboard
+Route::get('/getDashboard', 'App\Http\Controllers\DashboardController@getDashboard');
+
 // player type
 Route::get('/playerType', 'App\Http\Controllers\PlayerTypeController@getPlayerType');
 Route::post('/createPlayerType', 'App\Http\Controllers\PlayerTypeController@createPlayerType');

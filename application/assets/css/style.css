@@ -9,6 +9,12 @@
     display: table;
     clear: both;
 }
+.select2 {
+    width: 100%;
+}
+.select2-selection.select2-selection--single {
+    height: 34px !important;
+}
 .header {
     height: 50px;
     border-bottom: 2px solid #fff;
@@ -83,13 +89,28 @@
     font-size: 16px;
 }
 input[type="radio"] {
-    width: 1em; /* Adjust width */
-    height: 1em; /* Adjust height */
+    width: 1em; 
+    height: 1em; 
 }
 .dashboard {
     display: flex;
     height: 100%;
-    justify-content: center;
+    flex-wrap: wrap;
+}
+.dashboard .summury-box {
+    padding: 10px;
+    margin: 10px 0 0px 10px;
+    font-style: italic;
+    color: #fff;
+    border-radius: 8px;
+}
+.dashboard .summury-box {
+    div {
+        font-size: 30px;
+    }
+    span {
+        font-size: 32px;
+    }
 }
 .status {
     padding: 6px;

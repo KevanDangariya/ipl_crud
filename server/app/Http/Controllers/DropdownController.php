@@ -9,12 +9,12 @@ use Illuminate\Http\Request;
 class DropdownController extends Controller
 {
     public function playerType() {
-        $playerType = PlayerType::select('id','name')->get()->toArray();
+        $playerType = PlayerType::select('id','name')->where('status','=','0')->get()->toArray();
         return response()->json(['data' => $playerType], 200);
     }
 
     public function team() {
-        $team = Team::select('id','name')->get()->toArray();
+        $team = Team::select('id','name')->where('status','=','0')->get()->toArray();
         return response()->json(['data' => $team], 200);
     }
 }

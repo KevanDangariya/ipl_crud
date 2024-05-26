@@ -97,17 +97,17 @@
         }    
 
         app.controller('dashboardController', function ($rootScope, $scope, $http, $location) {
-            $http.get(BACKEND_URL + '/api/player', {})
+            $http.get(BACKEND_URL + '/api/getDashboard', {})
             .then(function successCallback(response) {
-                console.log(response.data);
+                $scope.dashboard = response.data.data;
             },function errorCallback(response){
-                console.log(response.data);
+                var err = response.data.errors;
             });
+
         })
 
-        app.controller('playerController', function ($rootScope, $scope, $http, $location) {
-
-            // edit player type
+        app.controller('playerController', function ($rootScope, $scope, $http, $location, $compile) {
+            // edit player 
             $scope.edit = function(id) {
                 $http.post(BACKEND_URL + '/api/getPlayerById/' + id , {
                     data: id
@@ -120,7 +120,7 @@
                 });
             }
 
-            // delete player type
+            // delete player 
             $scope.delete = function(id) {
 
                 $http.post(BACKEND_URL + '/api/deletePlayerById/' + id, {
@@ -142,12 +142,12 @@
                     columns: [
                         {'data':'id'},
                         {'data':'name'},
-                        {'data':'type'},
-                        {'data':'team'},
+                        {'data':'team_name'},
+                        {'data':'type_name'},
                         {
                             'data':'status',
                             render: function (data) {
-                                return data == 0 ? '<span class=" status bg-primary text-white">Active</span>' : '<span class="status bg-warning">Inactive</span>';
+                                return data == 0 ? '<span class=" status bg-success text-white">Active</span>' : '<span class="status bg-danger text-white">Inactive</span>';
                             }
                         },
                         {
@@ -187,31 +187,54 @@
             }
             getPlayer();
         })
-
+        
         app.controller('createPlayerController', function ($rootScope, $scope, $http, $location) {
-            $scope.player = {name: '', player_type: '', team: '', status: 0};
+            $scope.isNew = 1;
+            $scope.player = {name: '', type_id: '', team_id: '', status: 0};
+            
+            $scope.loadData = function(dd) {
+                $http.get(BACKEND_URL + '/api/' + dd + 'Dropdown')
+                .then(function(response) {
+                    $('#'+dd).select2({
+                        placeholder: 'Select '+dd,
+                        allowClear: true
+                    }).empty().append(new Option('', '', true, true)).trigger('change');
+                    response.data.data.forEach(function(item) {
+                        var newOption = new Option(item.name, item.id, false, false);
+                        $('#'+dd).append(newOption);
+                    });
+                    $('#'+dd).val(null).trigger('change');
+
+                });
+            };
+            $scope.loadData('playerType');
+            $scope.loadData('team');
+            
             $scope.save = function() {
+                $('#name_err').html('');
+                $('#team_err').html('');
+                $('#type_err').html('');
+                $scope.player.type_id = $('#playerType').val();
+                $scope.player.team_id = $('#team').val();
                 if ($scope.player.status == null) {
                     $('#status_err').html('Please select status.');
                 }
-                if (!$scope.player.team) {
+                if (!$scope.player.team_id) {
                     $('#team_err').html('Please select team.');
                 }
-                if (!$scope.player.player_type) {
+                if (!$scope.player.type_id) {
                     $('#type_err').html('Please select type.');
                 }
                 if (!$scope.player.name) {
                     $('#name_err').html('Please enter name.');
                 }
-                else {
-                    $('#name_err').html('');
-                    $('#team_err').html('');
-                    $('#type_err').html('');
+                if ($scope.player.status != null && $scope.player.type_id && $scope.player.team_id) {
 
                     $http.post(BACKEND_URL + '/api/createPlayer', {
                         data: $scope.player
                     })
                     .then(function successCallback(response) {
+                        delete $scope.isNew;
                         $location.path('/player');
                     },function errorCallback(response){
                         var err = response.data.errors;
@@ -230,37 +253,37 @@
                     });
                 }
             } 
-
-            $('#player_type').click(function () {
-                $http.get(BACKEND_URL + '/api/playerTypeDropdown', {})
-                .then(function successCallback(response) {
-                    console.log(response);
-                    $('#player_type').select2({
-                        data: response.data.playerType
-                    })
-                },function errorCallback(response){
-                    var err = response.data.errors;
-                });
-            })
-
-            $('#player_team').on('click', function () {
-                $http.post(BACKEND_URL + '/api/teamDropdown', {})
-                .then(function successCallback(response) {
-                    console.log(response);
-                    // $('#player_type').select2(response)
-                },function errorCallback(response){
-                    var err = response.data.errors;
-                });
-            })
         })
 
         app.controller('editPlayerController', function ($rootScope, $scope, $http, $location) {
             var url = $location.absUrl().split('/edit/');
             var id = url[1];
+            $location.path('/player/edit/'+id);
+            $scope.player = {name: '', type_id: '', team_id: '', status: 0};
+
+            $scope.loadData = function(dd) {
+                $http.get(BACKEND_URL + '/api/' + dd + 'Dropdown')
+                .then(function(response) {
+                    $('#'+dd).select2({
+                        placeholder: 'Select '+dd,
+                        allowClear: true
+                    }).empty().append(new Option('', '', true, true)).trigger('change');
+                    response.data.data.forEach(function(item) {
+                        var newOption = new Option(item.name, item.id, false, false);
+                        $('#'+dd).append(newOption);
+                    });
+                    $('#'+dd).val(null).trigger('change');
+
+                });
+            };
+            $scope.loadData('playerType');
+            $scope.loadData('team');
+
             $http.post(BACKEND_URL + '/api/getPlayerById/' + id , {})
             .then(function successCallback(response) {
-                $location.path('/player/edit/'+id);
                 $scope.player = response.data.data[0];
+                $('#playerType').val(response.data.data[0].type_id).trigger('change');
+                $('#team').val(response.data.data[0].team_id).trigger('change');
                 if (response.data.data[0].status == 0) {
                     $scope.player.status = '0';
                 } else {
@@ -270,24 +293,25 @@
                 var err = response.data.errors;
             });
 
-
             $scope.save = function() {
+                $('#name_err').html('');
+                $('#team_err').html('');
+                $('#type_err').html('');
+                $scope.player.type_id = $('#playerType').val();
+                $scope.player.team_id = $('#team').val();
                 if ($scope.player.status == null) {
                     $('#status_err').html('Please select status.');
                 }
-                if (!$scope.player.team) {
+                if (!$scope.player.team_id) {
                     $('#team_err').html('Please select team.');
                 }
-                if (!$scope.player.type) {
+                if (!$scope.player.type_id) {
                     $('#type_err').html('Please select type.');
                 }
-                if (!$scope.playerType.name) {
+                if (!$scope.player.name) {
                     $('#name_err').html('Please enter name.');
                 }
-                else {
-                    $('#name_err').html('');
-                    $('#team_err').html('');
-                    $('#type_err').html('');
+                if ($scope.player.status != null && $scope.player.type_id && $scope.player.team_id) {
 
                     $http.post(BACKEND_URL + '/api/editPlayerById/' + id, {
                         data: $scope.player
@@ -353,7 +377,7 @@
                         {
                             'data':'status',
                             render: function (data) {
-                                return data == 0 ? '<span class=" status bg-primary text-white">Active</span>' : '<span class="status bg-warning">Inactive</span>';
+                                return data == 0 ? '<span class=" status bg-success text-white">Active</span>' : '<span class="status bg-danger text-white">Inactive</span>';
                             }
                         },
                         {
@@ -395,6 +419,7 @@
         })
 
         app.controller('createPlayerTypeController', function ($rootScope, $scope, $http, $location) {
+            $scope.isNew = 1;
             $scope.playerType = {name: '', status: 0};
             $scope.save = function() {
                 if ($scope.playerType.status == null) {
@@ -410,6 +435,7 @@
                         data: $scope.playerType
                     })
                     .then(function successCallback(response) {
+                        delete $scope.isNew;
                         $location.path('/playerType');
                     },function errorCallback(response){
                         var err = response.data.errors;
@@ -510,7 +536,7 @@
                         {
                             'data':'status',
                             render: function (data) {
-                                return data == 0 ? '<span class=" status bg-primary text-white">Active</span>' : '<span class="status bg-warning">Inactive</span>';
+                                return data == 0 ? '<span class=" status bg-success text-white">Active</span>' : '<span class="status bg-danger text-white">Inactive</span>';
                             }
                         },
                         {
@@ -552,6 +578,7 @@
         })
 
         app.controller('createTeamController', function ($rootScope, $scope, $http, $location) {
+            $scope.isNew = 1;
             $scope.team = {name: '', nickname: '', status: 0};
             $scope.save = function() {
                 if ($scope.team.status == null) {
@@ -571,6 +598,7 @@
                         data: $scope.team
                     })
                     .then(function successCallback(response) {
+                        delete $scope.isNew;
                         $location.path('/team');
                     },function errorCallback(response){
                         var err = response.data.errors;
