@@ -96,6 +96,28 @@
             .otherwise({ redirectTo: '/' });
         }    
 
+        app.directive('fileInput', ['$parse', function ($parse) {
+            return {
+                restrict: 'A',
+                link: function (scope, element, attrs) {
+                    element.bind('change', function () {
+                        $parse(attrs.fileInput)
+                            .assign(scope, element[0].files[0]);
+                        scope.$apply();
+                        // Update the image preview
+                        var reader = new FileReader();
+                        reader.onload = function(e) {
+                            scope.$apply(function() {
+                                scope.player.imagePreview = e.target.result;
+                                delete scope.isEdit;
+                            });
+                        };
+                        reader.readAsDataURL(element[0].files[0]);
+                    });
+                }
+            };
+        }]);        
+
         app.controller('dashboardController', function ($rootScope, $scope, $http, $location) {
             $http.get(BACKEND_URL + '/api/getDashboard', {})
             .then(function successCallback(response) {
@@ -109,9 +131,7 @@
         app.controller('playerController', function ($rootScope, $scope, $http, $location, $compile) {
             // edit player 
             $scope.edit = function(id) {
-                $http.post(BACKEND_URL + '/api/getPlayerById/' + id , {
-                    data: id
-                })
+                $http.get(BACKEND_URL + '/api/getPlayerById/' + id , {})
                 .then(function successCallback(response) {
                     $location.path('/player/edit/'+id);
                     $scope.player = response.data.data;
@@ -141,6 +161,13 @@
                     searching: true,
                     columns: [
                         {'data':'id'},
+                        {   
+                            'data':'image',
+                            'className': "image_center",
+                            render: function (data) {
+                                return data != null ? '<img src="../server/public/storage/uploads/'+ data + '" width="60" style="border-radius: 8px;" >' : '<img src="./assets/images/demoperson.jpg" width="60" >';
+                            }
+                        },
                         {'data':'name'},
                         {'data':'team_name'},
                         {'data':'type_name'},
@@ -190,7 +217,7 @@
         
         app.controller('createPlayerController', function ($rootScope, $scope, $http, $location) {
             $scope.isNew = 1;
-            $scope.player = {name: '', type_id: '', team_id: '', status: 0};
+            $scope.player = {name: '', type_id: '', team_id: '', status: 0, image: null, imagePreview: null};
             
             $scope.loadData = function(dd) {
                 $http.get(BACKEND_URL + '/api/' + dd + 'Dropdown')
@@ -214,6 +241,7 @@
                 $('#name_err').html('');
                 $('#team_err').html('');
                 $('#type_err').html('');
+                $('#image_err').html('');
                 $scope.player.type_id = $('#playerType').val();
                 $scope.player.team_id = $('#team').val();
                 if ($scope.player.status == null) {
@@ -228,10 +256,19 @@
                 if (!$scope.player.name) {
                     $('#name_err').html('Please enter name.');
                 }
-                if ($scope.player.status != null && $scope.player.type_id && $scope.player.team_id) {
-
-                    $http.post(BACKEND_URL + '/api/createPlayer', {
-                        data: $scope.player
+                if (!$scope.player.image) {
+                    $('#image_err').html('Please choose image.');
+                }
+                if ($scope.player.status != null && $scope.player.type_id && $scope.player.team_id && $scope.player.image != null) {
+                    var formData = new FormData();
+                    formData.append('name', $scope.player.name);
+                    formData.append('type_id', $scope.player.type_id);
+                    formData.append('team_id', $scope.player.team_id);
+                    formData.append('status', $scope.player.status);
+                    formData.append('image', $scope.player.image);
+                    $http.post(BACKEND_URL + '/api/createPlayer', formData, {
+                        headers: { 'Content-Type': undefined },
+                        transformRequest: angular.identity
                     })
                     .then(function successCallback(response) {
                         delete $scope.isNew;
@@ -250,6 +287,9 @@
                         if (err.status) {
                             $('#status_err').html(err.status);                            
                         }
+                        if (err.image) {
+                            $('#image_err').html(err.image);                            
+                        }
                     });
                 }
             } 
@@ -258,8 +298,9 @@
         app.controller('editPlayerController', function ($rootScope, $scope, $http, $location) {
             var url = $location.absUrl().split('/edit/');
             var id = url[1];
+            $scope.isEdit = 1;
             $location.path('/player/edit/'+id);
-            $scope.player = {name: '', type_id: '', team_id: '', status: 0};
+            $scope.player = {name: '', type_id: '', team_id: '', status: 0, image: null, imagePreview: null};
 
             $scope.loadData = function(dd) {
                 $http.get(BACKEND_URL + '/api/' + dd + 'Dropdown')
@@ -279,9 +320,10 @@
             $scope.loadData('playerType');
             $scope.loadData('team');
 
-            $http.post(BACKEND_URL + '/api/getPlayerById/' + id , {})
+            $http.get(BACKEND_URL + '/api/getPlayerById/' + id , {})
             .then(function successCallback(response) {
                 $scope.player = response.data.data[0];
+                $scope.player.imagePreview = response.data.data[0].image;
                 $('#playerType').val(response.data.data[0].type_id).trigger('change');
                 $('#team').val(response.data.data[0].team_id).trigger('change');
                 if (response.data.data[0].status == 0) {
@@ -292,6 +334,23 @@
             },function errorCallback(response){
                 var err = response.data.errors;
             });
+
+            $scope.deletePlayerImage = function () {
+                var data = new FormData();
+                data.append('image', $scope.player.image);
+                if (confirm("Are you sure you want to delete this player image?")) {
+                    $http.post(BACKEND_URL + '/api/deleteImage/' + id, data, {
+                        headers: { 'Content-Type': undefined },
+                        transformRequest: angular.identity
+                    })
+                    .then(function(response) {
+                        $scope.player.image = null;
+                        $scope.player.imagePreview = null;
+                    }, function(error) {
+                        console.log('Error:', error);
+                    });
+                }
+            }
 
             $scope.save = function() {
                 $('#name_err').html('');
@@ -311,12 +370,22 @@
                 if (!$scope.player.name) {
                     $('#name_err').html('Please enter name.');
                 }
-                if ($scope.player.status != null && $scope.player.type_id && $scope.player.team_id) {
-
-                    $http.post(BACKEND_URL + '/api/editPlayerById/' + id, {
-                        data: $scope.player
+                if (!$scope.player.image) {
+                    $('#image_err').html('Please choose image.');
+                }
+                if ($scope.player.image != null && $scope.player.status != null && $scope.player.type_id && $scope.player.team_id) {
+                    var formData = new FormData();
+                    formData.append('name', $scope.player.name);
+                    formData.append('type_id', $scope.player.type_id);
+                    formData.append('team_id', $scope.player.team_id);
+                    formData.append('status', $scope.player.status);
+                    formData.append('image', $scope.player.image);
+                    $http.post(BACKEND_URL + '/api/editPlayerById/' + id, formData, {
+                        headers: { 'Content-Type': undefined },
+                        transformRequest: angular.identity
                     })
                     .then(function successCallback(response) {
+                        delete $scope.isEdit;
                         $location.path('/player');
                     },function errorCallback(response){
                         var err = response.data.errors;
@@ -332,6 +401,9 @@
                         if (err.status) {
                             $('#status_err').html(err.status);                            
                         }
+                        if (err.image) {
+                            $('#image_err').html(err.image);                            
+                        }
                     });
                 }
             }
@@ -341,9 +413,7 @@
 
             // edit player type
             $scope.edit = function(id) {
-                $http.post(BACKEND_URL + '/api/getPlayerTypeById/' + id , {
-                    data: id
-                })
+                $http.get(BACKEND_URL + '/api/getPlayerTypeById/' + id , {})
                 .then(function successCallback(response) {
                     $location.path('/playerType/edit/'+id);
                     $scope.playerType = response.data.data;
@@ -453,7 +523,7 @@
         app.controller('editPlayerTypeController', function ($rootScope, $scope, $http, $location) {
             var url = $location.absUrl().split('/edit/');
             var id = url[1];
-            $http.post(BACKEND_URL + '/api/getPlayerTypeById/' + id , {})
+            $http.get(BACKEND_URL + '/api/getPlayerTypeById/' + id , {})
             .then(function successCallback(response) {
                 $location.path('/playerType/edit/'+id);
                 $scope.playerType = response.data.data[0];
@@ -499,9 +569,7 @@
 
             // edit team
             $scope.edit = function(id) {
-                $http.post(BACKEND_URL + '/api/getTeamById/' + id , {
-                    data: id
-                })
+                $http.get(BACKEND_URL + '/api/getTeamById/' + id , {})
                 .then(function successCallback(response) {
                     $location.path('/team/edit/'+id);
                     $scope.team = response.data.data;
@@ -619,7 +687,7 @@
         app.controller('editTeamController', function ($rootScope, $scope, $http, $location) {
             var url = $location.absUrl().split('/edit/');
             var id = url[1];
-            $http.post(BACKEND_URL + '/api/getTeamById/' + id , {})
+            $http.get(BACKEND_URL + '/api/getTeamById/' + id , {})
             .then(function successCallback(response) {
                 $location.path('/team/edit/'+id);
                 $scope.team = response.data.data[0];

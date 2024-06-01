@@ -36,6 +36,25 @@
             <span id="team_err" class="error text-danger"></span>
         </div>
         <div class="clearfix"></div>
+        <div>
+            <div>
+                <label>Image</label>
+            </div>
+            <div>
+                <input type="file" file-input="player.image">
+            </div>
+            <button ng-if="player.imagePreview && isEdit" type="button" class="btn btn-light" ng-click="deletePlayerImage()">Delete</button>
+            <div>
+                <div ng-if="player.imagePreview">
+                    <img ng-if="!isEdit" ng-src="{{player.imagePreview}}" alt="Image Preview" class="img-thumbnail mt-2" style="max-width: 200px;">
+                    <img ng-if="isEdit" ng-src="../server/public/storage/uploads/{{player.imagePreview}}" alt="Image Preview" class="img-thumbnail mt-2" style="max-width: 200px;">
+                </div>
+                <div ng-if="!player.imagePreview">
+                    <img ng-src="./assets/images/demoperson.jpg" alt="Image Preview" class="img-thumbnail mt-2" style="max-width: 100px;">
+                </div>
+            </div>
+            <span id="image_err" class="error text-danger"></span>            
+        </div>
         <div class="col-lg-4">
             <div>
                 <label>Status</label>
@@ -49,32 +68,4 @@
             <span id="status_err" class="error text-danger"></span>
         </div>
     </div>
-    <!-- <div class="row">
-        <div class="col-md-4">
-            <div>
-                <label>Name</label>
-            </div>
-            <div>
-                <select ui-select2 style="width: 100%;" ng-model="select2" data-placeholder="Pick a number">
-                    <option value=""></option>
-                    <option value="one">First</option>
-                    <option value="two">Second</option>
-                    <option value="three">Third</option>
-                </select>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div>
-                <label>Type</label>
-            </div>
-            <div>
-                <select ui-select2 style="width: 100%;" ng-model="select2" data-placeholder="Specialization">
-                    <option value=""></option>
-                    <option value="Batsman">Batsman</option>
-                    <option value="two">Second</option>
-                    <option value="three">Third</option>
-                </select>
-            </div>
-        </div>
-    </div> -->
 </div>

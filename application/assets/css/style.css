@@ -35,7 +35,8 @@
 .sidebar {
     background: #31473A;
     font-size: 18px; 
-    height: 93vh;
+    height: 100;
+    min-height: 93vh;
 }
 .sidebar .menu-option {
     border-bottom: 1px solid #fff;
@@ -115,4 +116,8 @@ input[type="radio"] {
 .status {
     padding: 6px;
     border-radius: 6px;
+}
+.image_center {
+    display: flex;
+    justify-content: center;
 }
